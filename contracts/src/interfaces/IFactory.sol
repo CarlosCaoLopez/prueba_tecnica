@@ -14,7 +14,7 @@ interface IFactory {
      * @param creator La dirección del usuario que crea la colección.
      * @param collectionAddress La dirección del nuevo contrato ERC721 desplegado.
      */
-    event ERC721TokenCreated(address indexed creator, address indexed collectionAddress);
+    event ERC721CollectionCreated(address indexed creator, address indexed collectionAddress);
 
     /**
      * @dev Crea y despliega un nuevo contrato de token ERC20.

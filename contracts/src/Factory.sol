@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 // @TO-DO: Pausable
 contract Factory is IFactory, Ownable {
     address public immutable erc20Implementation;
+    address public immutable erc721Implementation;
 
     address[] public allERC20;
     address[] public allERC721;
@@ -23,8 +24,11 @@ contract Factory is IFactory, Ownable {
     mapping(address => address) public userToERC721;
 
     constructor() Ownable(msg.sender) {
-        // Deploy implementation only once
+        // Deploy he ERC20 implementation only once
         erc20Implementation = address(new ERC20Token());
+
+        // Deploy the ERC721 implementation only once
+        erc721Implementation = address(new ERC721Token());
     }
 
     // --- Factory Functions ---
@@ -48,21 +52,26 @@ contract Factory is IFactory, Ownable {
         return cloneAddress;
     }
 
-    function createERC721(string memory name, string memory symbol) external returns (address) {
-        require(!hasCreatedERC721[msg.sender], "Factory:  User has already created an ERC20 contract");
+    /**
+     * @dev Creates a new ERC721 collection by cloning a base implementation.
+     */
+    function createERC721(string memory name, string memory symbol) external override returns (address) {
+        require(!hasCreatedERC721[msg.sender], "Factory: Caller has already created an ERC721 collection");
+
+        // 1. Clone the implementation contract
+        address cloneAddress = Clones.clone(erc721Implementation);
+
+        // 2. Initialize the newly created clone
+        ERC721Token(cloneAddress).initialize(name, symbol, msg.sender);
+
+        // Update state (same as before)
         hasCreatedERC721[msg.sender] = true;
+        userToERC721[msg.sender] = cloneAddress;
+        allERC721.push(cloneAddress);
 
-        ERC721Token ERC721Contract = new ERC721Token(name, symbol, msg.sender);
-        address collectionAddress = address(ERC721Contract);
+        emit ERC721CollectionCreated(msg.sender, cloneAddress);
 
-        // Update state
-        hasCreatedERC721[msg.sender] = true;
-        userToERC721[msg.sender] = collectionAddress;
-        allERC721.push(collectionAddress);
-
-        emit ERC721TokenCreated(msg.sender, collectionAddress);
-
-        return collectionAddress;
+        return cloneAddress;
     }
 
     // --- Getter Functions ---
