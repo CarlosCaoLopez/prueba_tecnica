@@ -1,0 +1,118 @@
+openapi: 3.0.0
+info:
+  title: Factory API
+  description: >
+    The Factory project includes a backend that allows users to deploy ERC20 or ERC721 tokens from a factory and query information about them.
+  version: "1.1"
+paths:
+  /factory/counts:
+    get:
+      summary: Get Token Creation Counts
+      description: Retrieves the total number of ERC20 and ERC721 tokens that have been created through the factory.
+      tags:
+        - Factory
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  erc20Count:
+                    type: integer
+                    description: The total number of ERC20 tokens created.
+                    example: 15
+                  erc721Count:
+                    type: integer
+                    description: The total number of ERC721 collections created.
+                    example: 8
+                  total:
+                    type: integer
+                    description: The combined total of all tokens created.
+                    example: 23
+        "500":
+          description: Internal Server Error
+
+  /factory/creations/{userAddress}:
+    get:
+      summary: Get Tokens Created by a User
+      description: Checks if an user has created an ERC20 token or an ERC721 token. If both tokens have not been created, the address will be the zero address.
+      tags:
+        - Factory
+      parameters:
+        - name: userAddress
+          in: path
+          required: true
+          description: The wallet address of the user to check.
+          schema:
+            type: string
+            pattern: "^0x[a-fA-F0-9]{40}$"
+            example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: "false"
+                  userAddress:
+                    type: string
+                    example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+        "400":
+          description: Invalid user address supplied.
+        "500":
+          description: Internal Server Error
+
+  /token/balance/{tokenAddress}/{userAddress}:
+    get:
+      summary: Get User's ERC20 Token Balance
+      description: Retrieves the balance of a specific user for a given ERC20 token that was created by the factory.
+      tags:
+        - Token
+      parameters:
+        - name: tokenAddress
+          in: path
+          required: true
+          description: The contract address of the ERC20 token.
+          schema:
+            type: string
+            pattern: "^0x[a-fA-F0-9]{40}$"
+            example: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        - name: userAddress
+          in: path
+          required: true
+          description: The wallet address of the user whose balance is being checked.
+          schema:
+            type: string
+            pattern: "^0x[a-fA-F0-9]{40}$"
+            example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userAddress:
+                    type: string
+                    example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+                  tokenAddress:
+                    type: string
+                    example: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+                  symbol:
+                    type: string
+                    example: "MTK"
+                  balance:
+                    type: string
+                    description: The user's token balance, formatted as a string to handle large numbers.
+                    example: "1000.0"
+        "400":
+          description: Invalid token or user address supplied.
+        "500":
+          description: Internal Server Error

@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-// @TO-DO: Pausable
+// It can also be addedes as Pausable
 contract Factory is IFactory, Ownable {
     address public immutable erc20Implementation;
     address public immutable erc721Implementation;
@@ -23,6 +23,9 @@ contract Factory is IFactory, Ownable {
     mapping(address => address) public userToERC20;
     mapping(address => address) public userToERC721;
 
+    uint256 public lastDeploymentTime;
+    uint256 private constant COOLDOWN = 10 minutes;
+
     constructor() Ownable(msg.sender) {
         // Deploy he ERC20 implementation only once
         erc20Implementation = address(new ERC20Token());
@@ -31,9 +34,19 @@ contract Factory is IFactory, Ownable {
         erc721Implementation = address(new ERC721Token());
     }
 
+    modifier cooldownActive() {
+        require(block.timestamp >= lastDeploymentTime + COOLDOWN, "Factory: Cooldown is active, please wait");
+        _;
+        lastDeploymentTime = block.timestamp;
+    }
+
     // --- Factory Functions ---
 
-    function createERC20(string memory name, string memory symbol, uint256 initialSupply) external returns (address) {
+    function createERC20(string memory name, string memory symbol, uint256 initialSupply)
+        external
+        cooldownActive
+        returns (address)
+    {
         require(!hasCreatedERC20[msg.sender], "Factory: User has already created an ERC20 contract");
 
         // 1. Clonar
@@ -55,7 +68,7 @@ contract Factory is IFactory, Ownable {
     /**
      * @dev Creates a new ERC721 collection by cloning a base implementation.
      */
-    function createERC721(string memory name, string memory symbol) external override returns (address) {
+    function createERC721(string memory name, string memory symbol) external cooldownActive returns (address) {
         require(!hasCreatedERC721[msg.sender], "Factory: Caller has already created an ERC721 collection");
 
         // 1. Clone the implementation contract

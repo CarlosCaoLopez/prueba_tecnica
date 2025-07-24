@@ -1,5 +1,5 @@
 [default]
 src = "src"
 out = "out"
-libs = ["lib/openzeppelin-contracts", "lib/openzeppelin-contracts-upgradeable"]
+libs = ["lib/openzeppelin-contracts", "lib/openzeppelin-contracts-upgradeable", "lib/forge-std"]
 solc_version = "0.8.20"
